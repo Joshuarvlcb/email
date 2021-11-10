@@ -1,41 +1,65 @@
 const env = require("dotenv");
 const AuthError = require("../errors/unath-error");
 const jwt = require("jsonwebtoken");
-const register = (req, res) => {
-  const { username, password } = req.body;
+const User = require("../models/user-schema");
+const bcrypt = require("bcrypt");
+const register = async (req, res) => {
+  // const { username, password, email } = req.body;
+  // console.log(password);
+
+  // //salt is a  random bit combination that is included in the hash;
+  // //salt is added in the hask so the verifier can check even with randomness
+  // const salt = await bcrypt.genSalt(10);
+  // const hashpass = await bcrypt.hash(password, salt);
+
+  // console.log(hashpass);
+  const user = await User.create(req.body);
   /*
-regex email
-    /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)
-    *@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g
+    encrypting is storing your data behind a firewall
 
-  Creates a new User from the body 
-Creates a new token from the user
-Responds with username and token
-
-  save username and passwaord and token to 
-  the database
-  send res with username and token
-
+    hashing which scrambles yout data into a string of uniform size
+  
   */
+  // const { username, password, email } = req.body;
+  console.log("testing");
 
-  const token = jwt.sign({ username, password }, env.process.JWT_SECRET, {
-    expires: "20d",
+  // const id = new Date().getDate();
+  // const token = jwt.sign({ id, username }, "password", {
+  //   expiresIn: "20d",
+  // });
+  // console.log(userSchema);
+  const token = user.createJWT();
+
+  res.status(200).json({
+    user: {
+      name: user.username,
+    },
+    token,
   });
-  console.log(toke);
-  res.send("hi");
 };
 
-const login = (req, res) => {
-  /*
-    Takes the email and password from the body 
-Finds the user from the DB 
-Compares the passwords 
-Creates a token if everything is ok 
-Responds with username and token is all works out
+const login = async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    throw new Error("please provide email and password");
+  }
 
-    */
-  const { username, password } = req.body;
-  console.log(username, password);
+  const userLogin = await User.findOne({ email });
+  if (!userLogin) {
+    throw new AuthError("invalid credentials");
+  }
+  const isPasswordCorrect = await userLogin.comparePasswords(password);
+
+  if (!isPasswordCorrect) {
+    throw new AuthError("invalid credentials");
+  }
+  const token = userLogin.createJWT();
+  res.status(200).json({
+    user: {
+      name: userLogin.username,
+    },
+    token,
+  });
 };
 
 module.exports = {

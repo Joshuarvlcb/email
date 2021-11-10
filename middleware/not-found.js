@@ -1,10 +1,5 @@
-const CustomError = require("../errors/custom-error");
-
-const notFound = (err, res, req, next) => {
-  if (err instanceof CustomError) {
-    res.status(404).json({ msg: err.msg });
-  }
-  next();
+const notFound = (err, res) => {
+  res.status(404).json({ msg: err.msg });
 };
 
 module.exports = notFound;

@@ -21,16 +21,40 @@ Finds a job based on jobID and removes it from the DB
 Returns status OK and sends the ID that was removed back
 
 */
+const Job = require("../models/job-schema");
+const { StatusCodes } = require("http-status-codes");
+const { notFound } = require("../errors");
 
-const getAllJobs = (req, res) => {
+const getAllJobs = async (req, res) => {
+  const jobs = await Job.find({ createdBy: req.user.userID }).sort("createdAt");
+  res.status(StatusCodes.OK).json({ jobs, count: jobs.length });
+};
+const getJob = async (req, res) => {
+  const { userID } = req.user;
+  const { id: jobID } = req.params;
+
+  const job = await Job.findOne({
+    _id: jobID,
+    createdBy: userID,
+  });
+  if (!job) {
+    throw new NotFound("no job id");
+  }
+  res.status(StatusCodes.OK).json({ job });
+
   res.send("hi");
 };
-const getJob = (req, res) => {
-  res.send("hi");
-};
 
-const createJob = (req, res) => {
-  res.send("hi");
+const createJob = async (req, res) => {
+  // getting id
+  req.body.createdBy = req.user.userID;
+  // getting company and position
+  console.log(req.body);
+  const job = await Job.create(req.body);
+
+  res.status(StatusCodes.CREATED).json({
+    job,
+  });
 };
 
 const updateJob = (req, res) => {

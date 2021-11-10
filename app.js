@@ -1,5 +1,6 @@
 //imports
 //load env file
+require("dotenv").config();
 require("express-async-errors");
 //create app
 const express = require("express");
@@ -8,29 +9,27 @@ const jobsRouter = require("./routes/jobs");
 const authRouter = require("./routes/auth");
 const errorHandler = require("./middleware/error-handler");
 const notFound = require("./middleware/not-found");
+const connectDB = require("./db/connect");
+const auth = require("./middleware/auth");
 //use json middleware
 app
   .use([express.urlencoded({ extended: false }), express.json()])
+  //error middleware
+  .use("/api/v1/jobs", auth, jobsRouter)
+  .use("/api/v1/auth", authRouter)
   .use(errorHandler)
   .use(notFound);
-//error middleware
-app.use("/api/v1", jobsRouter);
-app.use("/api/v1", authRouter);
+
+const port = process.env.PORT || 3000;
 
 const start = async () => {
   try {
-    app.listen(3000);
+    connectDB(process.env.MONGO_URL);
+    app.listen(3000, () => {
+      console.log(`listening @ ${port}`);
+    });
   } catch (err) {
     console.log(err);
   }
 };
 start();
-//create route /send with get method to run sendEmail (controller)
-
-//use your not found and errorHandler middlewares
-
-//create port variable
-
-//create app startup fuction
-
-//run app start up function

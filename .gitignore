@@ -1,2 +1,4 @@
 # fill in the 2 files that go here 
 
+.env
+/node_modules
