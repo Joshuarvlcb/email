@@ -38,7 +38,7 @@ const getJob = async (req, res) => {
     createdBy: userID,
   });
   if (!job) {
-    throw new NotFound("no job id");
+    throw new notFound("no job id");
   }
   res.status(StatusCodes.OK).json({ job });
 
@@ -49,7 +49,6 @@ const createJob = async (req, res) => {
   // getting id
   req.body.createdBy = req.user.userID;
   // getting company and position
-  console.log(req.body);
   const job = await Job.create(req.body);
 
   res.status(StatusCodes.CREATED).json({
@@ -57,12 +56,41 @@ const createJob = async (req, res) => {
   });
 };
 
-const updateJob = (req, res) => {
-  res.send("hi");
+const updateJob = async (req, res) => {
+  console.log("userID");
+
+  const { company, position } = req.body;
+  const { userID } = req.user;
+  const { id: jobID } = req.params;
+  if (!company || !position) {
+    throw new notFound("company and position must be filled");
+  }
+  const job = await Job.findByIdAndUpdate(
+    {
+      _id: jobID,
+      createdBy: userID,
+    },
+    req.body,
+    //job will be saving the new document not the old one
+    //!!also run validators
+    { new: true, runValidators: true }
+  );
+
+  if (!job) throw new notFound(`no job with id ${jobID}`);
+  res.status(StatusCodes.OK).json({ job: job });
 };
 
-const deleteJob = (req, res) => {
-  res.send("hi");
+const deleteJob = async (req, res) => {
+  const { userID } = req.user;
+  const { id: jobID } = req.params;
+  const job = await Job.findByIdAndRemove({
+    _id: jobID,
+    createdby: userID,
+  });
+  if (!job) {
+    throw new notFound("no job with id");
+  }
+  res.status(StatusCodes.OK).json({ job: job });
 };
 
 module.exports = {
