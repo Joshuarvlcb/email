@@ -2,21 +2,29 @@
 //load env file
 require("dotenv").config();
 require("express-async-errors");
-//create app
+//core
 const express = require("express");
 const app = express();
+const connectDB = require("./db/connect");
+
+//routes
 const jobsRouter = require("./routes/jobs");
 const authRouter = require("./routes/auth");
+
+//middleware
 const errorHandler = require("./middleware/error-handler");
 const notFound = require("./middleware/not-found");
-const connectDB = require("./db/connect");
 const auth = require("./middleware/auth");
 
 //security libraries
 const rateLimiter = require("express-rate-limit");
 const helmet = require("helmet");
 const cors = require("cors");
-const xss = require("xss");
+const xss = require("xss-clean");
+
+const swaggerUI = require("swagger-ui-express");
+const YAML = require("yamljs");
+const swaggerDocs = YAML.load("./swagger.yaml");
 
 //use json middleware
 app
@@ -35,6 +43,10 @@ app
   .use(cors())
   //user sanitation this prevents SOME user based hacking
   .use(xss())
+  .get("/", (req, res) => {
+    res.send('<h1>Jobs API</h1><a href = "/api-docs>Documentation</a>"');
+  })
+  .use("/api/docs", swaggerUI.serve, swaggerUI.setup(swaggerDocs))
   .use("/api/v1/jobs", auth, jobsRouter)
   .use("/api/v1/auth", authRouter)
   //error middleware
