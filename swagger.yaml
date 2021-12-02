@@ -139,6 +139,17 @@ paths:
       summary: login
       operationId: login
       parameters: []
+      requestBody:
+        description: ""
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/registerrequest"
+            example:
+              name: josh
+              email: joshua@gm.com
+              password: 221122112josj
+        required: true
       responses:
         "200":
           description: ""
